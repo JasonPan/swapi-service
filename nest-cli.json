@@ -1,8 +1,59 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/api-gateway",
+  "projects": {
+    "api-gateway": {
+      "type": "application",
+      "root": "apps/api-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+      }
+    },
+    "swapi-connector": {
+      "type": "application",
+      "root": "apps/swapi-connector",
+      "entryFile": "main",
+      "sourceRoot": "apps/swapi-connector/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/swapi-connector/tsconfig.app.json"
+      }
+    },
+    "query-manager": {
+      "type": "application",
+      "root": "apps/query-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/query-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/query-manager/tsconfig.app.json"
+      }
+    },
+    "traffic-controller": {
+      "type": "application",
+      "root": "apps/traffic-controller",
+      "entryFile": "main",
+      "sourceRoot": "apps/traffic-controller/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/traffic-controller/tsconfig.app.json"
+      }
+    },
+    "request-scheduler": {
+      "type": "application",
+      "root": "apps/request-scheduler",
+      "entryFile": "main",
+      "sourceRoot": "apps/request-scheduler/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/request-scheduler/tsconfig.app.json"
+      }
+    }
   }
 }

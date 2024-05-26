@@ -1,0 +1,25 @@
+services:
+  nats-box:
+    image: natsio/nats-box:latest
+    container_name: swapi-nats-box
+    command: sh -c "while true; do sleep 2; done"
+
+  nats:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM nats:2.9.22-alpine3.18
+        RUN echo "max_payload: 16MB" >> /etc/nats/nats-server.conf
+    depends_on:
+      nats-box:
+        condition: service_started
+        restart: true
+    image: swapi/nats
+    container_name: swapi-nats-server
+    restart: on-failure:3
+    ports:
+      - 4222:4222
+      - 8222:8222
+    profiles:
+      - dependencies
+      - services
