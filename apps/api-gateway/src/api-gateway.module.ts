@@ -20,6 +20,7 @@ import { ApiGatewayService } from './api-gateway.service';
         name: process.env.SERVICE_NAME!,
         transport: Transport.NATS,
         options: {
+          name: process.env.SERVICE_NAME,
           servers: [process.env.NATS_URI!],
         },
       },

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { firstValueFrom, catchError, throwError } from 'rxjs';
 import { CreateQueryRequestDto } from 'lib/common/dto/create-query-request.dto';
 import { CreateQueryResponseDto } from 'lib/common/dto/create-query-response.dto';
-import { firstValueFrom, catchError, throwError } from 'rxjs';
 
 @Injectable()
 export class ApiGatewayService {

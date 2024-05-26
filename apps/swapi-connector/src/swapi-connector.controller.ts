@@ -1,12 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { SwapiConnectorService } from './swapi-connector.service';
+import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
 
 @Controller()
 export class SwapiConnectorController {
   constructor(private readonly swapiConnectorService: SwapiConnectorService) {}
 
-  @Get()
-  getHello(): string {
-    return this.swapiConnectorService.getHello();
+  @EventPattern('swapi.data.fetch')
+  fetchData(@Payload() dto: QueryRequestDto): void {
+    console.log('received fetch request');
+    this.swapiConnectorService.fetchDataAsync(dto);
   }
 }

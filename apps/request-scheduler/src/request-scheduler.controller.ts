@@ -1,12 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { RequestSchedulerService } from './request-scheduler.service';
+import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
 
 @Controller()
 export class RequestSchedulerController {
   constructor(private readonly requestSchedulerService: RequestSchedulerService) {}
 
-  @Get()
-  getHello(): string {
-    return this.requestSchedulerService.getHello();
+  @EventPattern('swapi.query.created')
+  scheduleRequest(@Payload() dto: QueryRequestDto): void {
+    this.requestSchedulerService.scheduleRequestAsync(dto);
   }
 }

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class TrafficControllerService {
-  getHello(): string {
-    return 'Hello World!';
+  async getIsRateLimitedAsync(): Promise<boolean> {
+    // TODO: get actual rate limit
+    return new Date().valueOf() % 2 === 0;
   }
 }
