@@ -3,7 +3,7 @@ import { IsArray, IsOptional, IsString, Matches, ValidateNested } from 'class-va
 import { Type } from 'class-transformer';
 import { QueryResultDto } from './query-result.dto';
 
-export class QueryRequestDto {
+export class QueryResultsDto {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

@@ -16,4 +16,7 @@ export class QueryEntity {
     // foreignKeyConstraintName: 'custom',
   })
   query_request: QueryRequestEntity;
+
+  @Column({ nullable: true, type: 'json' })
+  result?: any;
 }

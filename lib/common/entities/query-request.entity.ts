@@ -6,11 +6,11 @@ export class QueryRequestEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToMany(() => QueryEntity, (q) => q.query_request)
+  @OneToMany(() => QueryEntity, (q) => q.query_request, { eager: true })
   queries: QueryEntity[];
 
   @Column({ nullable: true })
-  callbackUrl?: string;
+  callback_url?: string;
 
   @Column()
   status: 'PENDING' | 'COMPLETED';
