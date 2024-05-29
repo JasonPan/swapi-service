@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { BullModule } from '@nestjs/bullmq';
 import { RequestSchedulerController } from './request-scheduler.controller';
 import { RequestSchedulerService } from './request-scheduler.service';
+import { ScheduledRequestProcessor } from './processors/scheduled-request-processor';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { RequestSchedulerService } from './request-scheduler.service';
         PORT: Joi.string().required(),
         SERVICE_NAME: Joi.string().required(),
         NATS_URI: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
       }),
       envFilePath: './apps/request-scheduler/.env',
     }),
@@ -25,8 +29,19 @@ import { RequestSchedulerService } from './request-scheduler.service';
         },
       },
     ]),
+    BullModule.forRoot(process.env.SERVICE_NAME!, {
+      connection: {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+      prefix: process.env.SERVICE_NAME!,
+    }),
+    BullModule.registerQueue({
+      configKey: process.env.SERVICE_NAME!,
+      name: 'scheduled-requests',
+    }),
   ],
   controllers: [RequestSchedulerController],
-  providers: [RequestSchedulerService],
+  providers: [RequestSchedulerService, ScheduledRequestProcessor],
 })
 export class RequestSchedulerModule {}
