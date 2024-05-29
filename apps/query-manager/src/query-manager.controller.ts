@@ -4,6 +4,7 @@ import { QueryManagerService } from './query-manager.service';
 import { CreateQueryRequestDto } from 'lib/common/dto/create-query-request.dto';
 import { CreateQueryResponseDto } from 'lib/common/dto/create-query-response.dto';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
+import { GetQueryRequestDto } from 'lib/common/dto/get-query-request.dto';
 
 @Controller()
 export class QueryManagerController {
@@ -17,5 +18,10 @@ export class QueryManagerController {
   @EventPattern('swapi.data.fetch.results')
   handleQueryRequestResultsAsync(@Payload() dto: QueryRequestDto): void {
     this.queryManagerService.handleQueryRequestResultsAsync(dto);
+  }
+
+  @MessagePattern('swapi.query.get')
+  async getQueryRequestAsync(@Payload() dto: GetQueryRequestDto): Promise<QueryRequestDto> {
+    return await this.queryManagerService.fetchQueryRequestResultsAsync(dto);
   }
 }

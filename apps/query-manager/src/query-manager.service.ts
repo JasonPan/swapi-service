@@ -5,8 +5,9 @@ import { Repository } from 'typeorm';
 import { CreateQueryRequestDto } from 'lib/common/dto/create-query-request.dto';
 import { CreateQueryResponseDto } from 'lib/common/dto/create-query-response.dto';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
-import { QueryRequestEntity } from 'lib/common/entities/query-request.entity';
-import { QueryEntity } from 'lib/common/entities/query.entity';
+import { QueryRequestEntity } from 'lib/common/modules/postgres/entities/query-request.entity';
+import { QueryEntity } from 'lib/common/modules/postgres/entities/query.entity';
+import { GetQueryRequestDto } from 'lib/common/dto/get-query-request.dto';
 
 @Injectable()
 export class QueryManagerService {
@@ -81,19 +82,13 @@ export class QueryManagerService {
     );
   }
 
-  async fetchQueryRequestResultsAsync(dto: QueryRequestDto): Promise<CreateQueryResponseDto> {
+  async fetchQueryRequestResultsAsync(dto: GetQueryRequestDto): Promise<QueryRequestDto> {
     const queryRequest = await this.queryRequestRepository.findOneOrFail({ where: { id: dto.id } });
 
     console.log(`Fetched query request with id: ${queryRequest.id}`);
     console.log(`Fetched ${queryRequest.queries.length} queries for request with id: ${queryRequest.id}`);
 
-    const response: CreateQueryResponseDto = {
-      id: queryRequest.id,
-      queries: queryRequest.queries.map((e) => e.path),
-      callbackUrl: queryRequest.callback_url,
-      status: queryRequest.status,
-    };
-
+    const response: QueryRequestDto = queryRequest;
     return response;
   }
 }

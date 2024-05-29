@@ -5,9 +5,9 @@ import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { QueryManagerController } from './query-manager.controller';
 import { QueryManagerService } from './query-manager.service';
-import { PostgresDatabaseModule } from 'lib/common/modules/postgres-database.module';
-import { QueryEntity } from 'lib/common/entities/query.entity';
-import { QueryRequestEntity } from 'lib/common/entities/query-request.entity';
+import { PostgresDatabaseModule } from 'lib/common/modules/postgres/postgres-database.module';
+import { QueryEntity } from 'lib/common/modules/postgres/entities/query.entity';
+import { QueryRequestEntity } from 'lib/common/modules/postgres/entities/query-request.entity';
 
 @Module({
   imports: [

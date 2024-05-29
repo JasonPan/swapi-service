@@ -1,6 +1,10 @@
 {
     "cSpell.words": [
         "swapi",
-        "typeorm"
+        "typeorm",
+        "uuidv",
+        "zadd",
+        "zcard",
+        "zremrangebyscore"
     ]
 }

@@ -9,14 +9,19 @@ export class RequestSchedulerService {
   constructor(@Inject('request-scheduler') private client: ClientProxy) {}
 
   async scheduleRequestAsync(dto: QueryRequestDto): Promise<void> {
-    // TODO: check if we can continue to make requests. If so, make the request immediately. If not, we need to schedule for a later time.
-
+    // Check if we can continue to make requests. If so, make the request immediately. If not, we need to schedule for a later time.
     console.log('Processing rate limit check.');
 
     const isRateLimited = await firstValueFrom(
       this.client
-        .send<boolean, RateLimitRequestDto>('swapi.rate-limit.get', { requestedAt: new Date() })
+        .send<boolean, RateLimitRequestDto>('swapi.rate-limit-usage.get', { requestedAt: new Date() })
         .pipe(catchError((error) => throwError(() => new RpcException(error.response)))),
+      // .pipe(
+      //   catchError((error) => {
+      //     console.error(error);
+      //     return throwError(() => new RpcException(error.response));
+      //   }),
+      // ),
     );
 
     if (isRateLimited) {

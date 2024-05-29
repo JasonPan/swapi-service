@@ -5,6 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { AxiosRequestConfig } from 'axios';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
 import { QueryResultDto } from 'lib/common/dto/query-result.dto';
+import { SwapiResourceEntity } from 'lib/common/modules/mongo/entities/swapi-resource.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class SwapiConnectorService {
@@ -14,6 +17,8 @@ export class SwapiConnectorService {
     @Inject('swapi-connector') private client: ClientProxy,
     private httpService: HttpService,
     private readonly configService: ConfigService,
+    @InjectRepository(SwapiResourceEntity)
+    private readonly swapiResourceRepository: Repository<SwapiResourceEntity>,
   ) {
     this.SWAPI_BASE_URL = this.configService.getOrThrow<string>('SWAPI_BASE_URL');
   }
@@ -30,11 +35,28 @@ export class SwapiConnectorService {
     // Note: currently sequential to ease burden on target service, but could be parallelised.
     const queryResponses = await dto.queries
       .map((query) => async (results: QueryResultDto[]) => {
-        const { data } = await this.httpService.axiosRef.get<any>(`${this.SWAPI_BASE_URL}/${query.path}`, config);
-        console.log('found data', data);
+        let resource: SwapiResourceEntity | null = await this.swapiResourceRepository.findOne({
+          where: { path: query.path },
+        });
+
+        console.log('found resource', resource);
+
+        if (!resource) {
+          const { data } = await this.httpService.axiosRef.get<any>(`${this.SWAPI_BASE_URL}/${query.path}`, config);
+          console.log('found data', data);
+
+          resource = new SwapiResourceEntity();
+          resource.path = query.path;
+          resource.cached_result = data;
+        }
+
+        console.log('saving data to mongo...');
+        await this.swapiResourceRepository.save(resource);
+        console.log('saved data to mongo');
+
         return results.concat({
           ...query,
-          result: data,
+          result: resource.cached_result,
         });
       })
       .reduce(
@@ -44,6 +66,17 @@ export class SwapiConnectorService {
         },
         Promise.resolve([] as QueryResultDto[]),
       );
+
+    // const queryResponses = await Promise.all(
+    //   dto.queries.map(async (query) => {
+    //     const { data } = await this.httpService.axiosRef.get<any>(`${this.SWAPI_BASE_URL}/${query.path}`, config);
+    //     console.log('found data', data);
+    //     return {
+    //       ...query,
+    //       result: data,
+    //     };
+    //   }),
+    // );
 
     console.log('queryResponses', queryResponses);
 
