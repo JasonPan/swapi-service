@@ -31,11 +31,11 @@ export class RequestSchedulerService {
       // ),
     );
 
-    if (!isRateLimited) {
+    if (isRateLimited) {
       console.log('Rate limited. Scheduling request for later.');
       // Schedule the request for later
       const id = uuidv4();
-      const delay = 86400 * 1000; // TODO: consider cases where we already have exceeded the rate limit as well; can we rely on a recursive check/re-queue mechanism?
+      const delay = 86400 * 1000; // TODO: consider cases where we already have exceeded the rate limit as well; can we rely on a recursive check/re-queue mechanism? Perhaps an exponential back-off algorithm.
       await this.scheduledRequestsQueue.add(id, dto, { delay });
     } else {
       console.log('Not rate limited. Making request now.');
