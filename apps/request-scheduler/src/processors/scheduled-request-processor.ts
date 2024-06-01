@@ -6,6 +6,7 @@ import { catchError, firstValueFrom, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
 import { RateLimitRequestDto } from 'lib/common/dto/rate-limit-request.dto';
+import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 
 @Processor('scheduled-requests')
 export class ScheduledRequestProcessor extends WorkerHost {
@@ -25,8 +26,11 @@ export class ScheduledRequestProcessor extends WorkerHost {
 
       const isRateLimited = await firstValueFrom(
         this.client
-          .send<boolean, RateLimitRequestDto>('swapi.rate-limit-usage.get', { requestedAt: new Date() })
-          .pipe(catchError((error) => throwError(() => new RpcException(error.response)))),
+          .send<
+            boolean,
+            RateLimitRequestDto
+          >(MICROSERVICE_SUBJECTS.MESSAGES.RATE_LIMIT_USAGE_READ, { requestedAt: new Date() })
+          .pipe(catchError((error) => throwError(() => new RpcException(error)))),
       );
 
       if (isRateLimited) {
@@ -37,7 +41,7 @@ export class ScheduledRequestProcessor extends WorkerHost {
         await this.scheduledRequestsQueue.add(id, dto, { delay });
       } else {
         console.log('Not rate limited. Making request now.');
-        this.client.emit<void, QueryRequestDto>('swapi.data.fetch', dto);
+        this.client.emit<void, QueryRequestDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULTS_FETCH, dto);
       }
     } catch (error) {
       console.error(`[${ScheduledRequestProcessor.name}] Job ${job.id} failed processing with error: ${error}`);

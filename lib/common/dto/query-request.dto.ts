@@ -8,7 +8,7 @@ export class QueryRequestDto {
   id: string;
 
   @IsArray()
-  @ValidateNested()
+  @ValidateNested({ each: true })
   @Type(() => QueryResultDto)
   queries: QueryResultDto[];
 

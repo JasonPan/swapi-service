@@ -54,6 +54,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/request-scheduler/tsconfig.app.json"
       }
+    },
+    "cache-manager": {
+      "type": "application",
+      "root": "apps/cache-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/cache-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/cache-manager/tsconfig.app.json"
+      }
     }
   }
 }

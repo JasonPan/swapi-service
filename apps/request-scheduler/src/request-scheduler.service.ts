@@ -6,6 +6,7 @@ import { Queue } from 'bullmq';
 import { v4 as uuidv4 } from 'uuid';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
 import { RateLimitRequestDto } from 'lib/common/dto/rate-limit-request.dto';
+import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 
 @Injectable()
 export class RequestSchedulerService {
@@ -21,12 +22,15 @@ export class RequestSchedulerService {
 
     const isRateLimited = await firstValueFrom(
       this.client
-        .send<boolean, RateLimitRequestDto>('swapi.rate-limit-usage.get', { requestedAt: new Date() })
-        .pipe(catchError((error) => throwError(() => new RpcException(error.response)))),
+        .send<
+          boolean,
+          RateLimitRequestDto
+        >(MICROSERVICE_SUBJECTS.MESSAGES.RATE_LIMIT_USAGE_READ, { requestedAt: new Date() })
+        .pipe(catchError((error) => throwError(() => new RpcException(error)))),
       // .pipe(
       //   catchError((error) => {
       //     console.error(error);
-      //     return throwError(() => new RpcException(error.response));
+      //     return throwError(() => new RpcException(error));
       //   }),
       // ),
     );
@@ -39,7 +43,7 @@ export class RequestSchedulerService {
       await this.scheduledRequestsQueue.add(id, dto, { delay });
     } else {
       console.log('Not rate limited. Making request now.');
-      this.client.emit<void, QueryRequestDto>('swapi.data.fetch', dto);
+      this.client.emit<void, QueryRequestDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULTS_FETCH, dto);
     }
   }
 }
