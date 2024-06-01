@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SwapiResourceEntity } from 'lib/common/modules/mongo/entities/swapi-resource.entity';
-import { QueryResultDto } from 'lib/common/dto/query-result.dto';
+import { SwapiResourceEntity } from 'lib/common/entities';
+import { SubqueryDto } from 'lib/common/dto';
 
 @Injectable()
 export class CacheManagerService {
@@ -11,7 +11,7 @@ export class CacheManagerService {
     private readonly swapiResourceRepository: Repository<SwapiResourceEntity>,
   ) {}
 
-  async readCacheAsync(dto: QueryResultDto): Promise<QueryResultDto> {
+  async readCacheAsync(dto: SubqueryDto): Promise<SubqueryDto> {
     const resource: SwapiResourceEntity | null = await this.swapiResourceRepository.findOne({
       where: { path: dto.path },
     });
@@ -22,7 +22,7 @@ export class CacheManagerService {
     return dto;
   }
 
-  async updateCache(dto: QueryResultDto): Promise<void> {
+  async updateCache(dto: SubqueryDto): Promise<void> {
     if (dto.result) {
       const existingResource: SwapiResourceEntity | null = await this.swapiResourceRepository.findOne({
         where: { path: dto.path },

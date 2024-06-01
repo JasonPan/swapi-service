@@ -1,25 +1,27 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiGatewayService } from './api-gateway.service';
-import { CreateQueryRequestDto } from 'lib/common/dto/create-query-request.dto';
-import { CreateQueryResponseDto } from 'lib/common/dto/create-query-response.dto';
-import { GetQueryRequestDto } from 'lib/common/dto/get-query-request.dto';
-import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
+import { CreateQueryRequestDto, CreateQueryResponseDto, GetQueryRequestDto, QueryDto } from 'lib/common/dto';
 
 @Controller()
 export class ApiGatewayController {
   constructor(private readonly apiGatewayService: ApiGatewayService) {}
 
-  @Get()
+  @Get('test-query')
   async getGraphQlQueryResponseAsync(): Promise<CreateQueryResponseDto> {
     const test: CreateQueryRequestDto = {
-      queries: ['people/1', 'planets/3', 'starships/9'],
+      subqueries: ['people/1', 'planets/3', 'starships/9'],
       callbackUrl: 'http://localhost:3000',
     };
-    return await this.apiGatewayService.createQueryRequestAsync(test);
+    return await this.createQueryAsync(test);
   }
 
-  @Get('/graphql/query/:id/status')
-  async getGraphQlQueryResponsStatusAsync(@Param() dto: GetQueryRequestDto): Promise<QueryRequestDto> {
+  @Post('query')
+  async createQueryAsync(@Param() dto: CreateQueryRequestDto): Promise<CreateQueryResponseDto> {
+    return await this.apiGatewayService.createQueryRequestAsync(dto);
+  }
+
+  @Get('/query/:id')
+  async getQueryAsync(@Param() dto: GetQueryRequestDto): Promise<QueryDto> {
     console.log(dto);
     return await this.apiGatewayService.getQueryRequest(dto);
   }

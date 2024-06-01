@@ -6,9 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { QueryManagerController } from './query-manager.controller';
 import { QueryManagerService } from './query-manager.service';
-import { PostgresDatabaseModule } from 'lib/common/modules/postgres/postgres-database.module';
-import { QueryEntity } from 'lib/common/modules/postgres/entities/query.entity';
-import { QueryRequestEntity } from 'lib/common/modules/postgres/entities/query-request.entity';
+import { PostgresDatabaseModule, QueryEntity, SubqueryEntity } from 'lib/common/modules/postgres';
 
 @Module({
   imports: [
@@ -36,7 +34,7 @@ import { QueryRequestEntity } from 'lib/common/modules/postgres/entities/query-r
       },
     ]),
     PostgresDatabaseModule,
-    TypeOrmModule.forFeature([QueryRequestEntity, QueryEntity]),
+    TypeOrmModule.forFeature([QueryEntity, SubqueryEntity]),
     HttpModule,
   ],
   controllers: [QueryManagerController],

@@ -4,8 +4,7 @@ import { Inject } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError, firstValueFrom, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { QueryResultDto } from 'lib/common/dto/query-result.dto';
-import { RateLimitRequestDto } from 'lib/common/dto/rate-limit-request.dto';
+import { RateLimitRequestDto, SubqueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 
 @Processor('scheduled-requests')
@@ -13,12 +12,12 @@ export class ScheduledRequestProcessor extends WorkerHost {
   constructor(
     @Inject('request-scheduler') private client: ClientProxy,
     @InjectQueue('scheduled-requests')
-    private scheduledRequestsQueue: Queue<QueryResultDto>,
+    private scheduledRequestsQueue: Queue<SubqueryDto>,
   ) {
     super();
   }
 
-  async process(job: Job<QueryResultDto>): Promise<void> {
+  async process(job: Job<SubqueryDto>): Promise<void> {
     try {
       console.log(`[${ScheduledRequestProcessor.name}] Processing job ${job.id} with data: ${job.data}`);
 
@@ -41,7 +40,7 @@ export class ScheduledRequestProcessor extends WorkerHost {
         await this.scheduledRequestsQueue.add(id, dto, { delay });
       } else {
         console.log('Not rate limited. Making request now.');
-        this.client.emit<void, QueryResultDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH, dto);
+        this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH, dto);
       }
     } catch (error) {
       console.error(`[${ScheduledRequestProcessor.name}] Job ${job.id} failed processing with error: ${error}`);
@@ -54,7 +53,7 @@ export class ScheduledRequestProcessor extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  onFailed(job: Job<QueryResultDto>, error: any) {
+  onFailed(job: Job<SubqueryDto>, error: any) {
     console.error(`[${ScheduledRequestProcessor.name}] Job ${job.id} failed with error: ${error}`);
   }
 }

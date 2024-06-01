@@ -1,7 +1,7 @@
 import { Controller, UseInterceptors, UsePipes } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { SwapiConnectorService } from './swapi-connector.service';
-import { QueryResultDto } from 'lib/common/dto/query-result.dto';
+import { SubqueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 import { RpcLoggingInterceptor } from 'lib/common/interceptors/rpc-logging.interceptor';
 import { RpcDtoValidationPipe } from 'lib/common/pipes/rpc-dto-validation.pipe';
@@ -13,7 +13,7 @@ export class SwapiConnectorController {
   constructor(private readonly swapiConnectorService: SwapiConnectorService) {}
 
   @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH)
-  fetchData(@Payload() dto: QueryResultDto): void {
+  fetchData(@Payload() dto: SubqueryDto): void {
     console.log('received fetch request');
     this.swapiConnectorService.fetchDataAsync(dto);
   }

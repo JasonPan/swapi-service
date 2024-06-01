@@ -4,8 +4,7 @@ import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheManagerController } from './cache-manager.controller';
 import { CacheManagerService } from './cache-manager.service';
-import { MongoDatabaseModule } from 'lib/common/modules/mongo/mongo-database.module';
-import { SwapiResourceEntity } from 'lib/common/modules/mongo/entities/swapi-resource.entity';
+import { MongoDatabaseModule, SwapiResourceEntity } from 'lib/common/modules/mongo';
 
 @Module({
   imports: [

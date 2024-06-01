@@ -1,15 +1,15 @@
 import { IsArray, IsOptional, IsString, IsUUID, Matches, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { QueryResultDto } from './query-result.dto';
+import { SubqueryDto } from '.';
 
-export class QueryResultsDto {
+export class QueryDto {
   @IsUUID()
   id: string;
 
   @IsArray()
-  @ValidateNested()
-  @Type(() => QueryResultDto)
-  queries: QueryResultDto[];
+  @ValidateNested({ each: true })
+  @Type(() => SubqueryDto)
+  subqueries: SubqueryDto[];
 
   @IsString()
   @IsOptional()

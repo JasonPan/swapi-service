@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsUUID } from 'class-validator';
 
-export class QueryResultDto {
+export class SubqueryDto {
   @IsUUID()
   id: string;
 
@@ -11,5 +11,5 @@ export class QueryResultDto {
   result?: any;
 
   @IsUUID()
-  query_request_id: string;
+  query_id: string;
 }

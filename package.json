@@ -92,5 +92,8 @@
     "roots": [
       "<rootDir>/apps/"
     ]
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

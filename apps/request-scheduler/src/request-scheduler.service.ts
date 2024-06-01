@@ -4,8 +4,7 @@ import { firstValueFrom, catchError, throwError } from 'rxjs';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { v4 as uuidv4 } from 'uuid';
-import { QueryResultDto } from 'lib/common/dto/query-result.dto';
-import { RateLimitRequestDto } from 'lib/common/dto/rate-limit-request.dto';
+import { RateLimitRequestDto, SubqueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 
 @Injectable()
@@ -13,10 +12,10 @@ export class RequestSchedulerService {
   constructor(
     @Inject('request-scheduler') private client: ClientProxy,
     @InjectQueue('scheduled-requests')
-    private scheduledRequestsQueue: Queue<QueryResultDto>,
+    private scheduledRequestsQueue: Queue<SubqueryDto>,
   ) {}
 
-  async scheduleRequestAsync(dto: QueryResultDto): Promise<void> {
+  async scheduleRequestAsync(dto: SubqueryDto): Promise<void> {
     // Check if we can continue to make requests. If so, make the request immediately. If not, we need to schedule for a later time.
     console.log('Processing rate limit check.');
 
@@ -43,7 +42,7 @@ export class RequestSchedulerService {
       await this.scheduledRequestsQueue.add(id, dto, { delay });
     } else {
       console.log('Not rate limited. Making request now.');
-      this.client.emit<void, QueryResultDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH, dto);
+      this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH, dto);
     }
   }
 }
