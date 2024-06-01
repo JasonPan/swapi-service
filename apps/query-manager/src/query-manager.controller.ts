@@ -4,6 +4,7 @@ import { QueryManagerService } from './query-manager.service';
 import { CreateQueryRequestDto } from 'lib/common/dto/create-query-request.dto';
 import { CreateQueryResponseDto } from 'lib/common/dto/create-query-response.dto';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
+import { QueryResultDto } from 'lib/common/dto/query-result.dto';
 import { GetQueryRequestDto } from 'lib/common/dto/get-query-request.dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 import { RpcLoggingInterceptor } from 'lib/common/interceptors/rpc-logging.interceptor';
@@ -20,9 +21,9 @@ export class QueryManagerController {
     return await this.queryManagerService.processNewQueryRequestAsync(dto);
   }
 
-  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULTS_RECEIVE)
-  handleQueryRequestResultsAsync(@Payload() dto: QueryRequestDto): void {
-    this.queryManagerService.handleQueryRequestResultsAsync(dto);
+  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_RECEIVE)
+  handleQueryRequestResultAsync(@Payload() dto: QueryResultDto): void {
+    this.queryManagerService.handleQueryRequestResultAsync(dto);
   }
 
   @MessagePattern(MICROSERVICE_SUBJECTS.MESSAGES.QUERY_READ)

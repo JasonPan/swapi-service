@@ -1,8 +1,7 @@
-import { PrimaryGeneratedColumn } from 'typeorm';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class QueryResultDto {
-  @PrimaryGeneratedColumn('uuid')
+  @IsUUID()
   id: string;
 
   @IsString()
@@ -10,4 +9,7 @@ export class QueryResultDto {
 
   @IsOptional()
   result?: any;
+
+  @IsUUID()
+  query_request_id: string;
 }

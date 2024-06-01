@@ -1,10 +1,9 @@
-import { PrimaryGeneratedColumn } from 'typeorm';
-import { IsArray, IsOptional, IsString, Matches, ValidateNested } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID, Matches, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { QueryResultDto } from './query-result.dto';
 
 export class QueryResultsDto {
-  @PrimaryGeneratedColumn('uuid')
+  @IsUUID()
   id: string;
 
   @IsArray()

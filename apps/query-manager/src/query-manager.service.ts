@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { catchError, firstValueFrom, throwError } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { v4 as uuidv4 } from 'uuid';
 import { CreateQueryRequestDto } from 'lib/common/dto/create-query-request.dto';
 import { CreateQueryResponseDto } from 'lib/common/dto/create-query-response.dto';
 import { QueryRequestDto } from 'lib/common/dto/query-request.dto';
@@ -32,57 +33,50 @@ export class QueryManagerService {
     const queryRequest: QueryRequestEntity = await this.generateQueryRequestEntityFromCreateDtoAsync(dto);
 
     const response =
-      (await this.fetchQueryRequestResultsFromCache(queryRequest)) ||
+      (await this.fetchQueryRequestResultsFromCache(queryRequest, true)) ||
       (await this.fetchQueryRequestResultsFromDataSource(queryRequest));
 
     return response;
   }
 
-  async handleQueryRequestResultsAsync(dto: QueryRequestDto): Promise<void> {
+  async handleQueryRequestResultAsync(dto: QueryResultDto): Promise<void> {
     console.log('handleQueryRequestResultsAsync', dto);
-    const queryRequest = await this.queryRequestRepository.findOneOrFail({ where: { id: dto.id } });
-    const queries = dto.queries.map((q) => {
-      const query = new QueryEntity();
-      query.id = q.id;
-      query.path = q.path;
-      query.result = q.result;
-      query.query_request = queryRequest;
-      return query;
-    });
+
+    const query = await this.queryRepository.findOneOrFail({ where: { id: dto.id } });
+    query.result = dto.result;
+
+    const queryRequest = await this.queryRequestRepository.findOneOrFail({ where: { id: dto.query_request_id } });
+
+    console.log('Saving...', query, queryRequest);
+
+    // TODO: use the results stored with the request directly, not re-retrieve from the cache. Define in API contract about request TTL to limit liability / guarantee freshness.
+    const cacheResults = await this.fetchQueryRequestResultsFromCache(queryRequest, false);
+    const latestResponse: CreateQueryResponseDto = {
+      id: queryRequest.id,
+      queries: cacheResults!.queries.map((q) => (q.id === dto.id ? dto : q)),
+      callbackUrl: queryRequest.callback_url,
+      status: queryRequest.status,
+    };
+    console.log('latestResponse', latestResponse);
+
+    const haveAllResults = latestResponse.queries.every((q) => !!q.result);
 
     // TODO: consider using a transaction to ensure consistency
     const updatedQueryRequest: QueryRequestEntity = await this.queryRequestRepository.save({
       ...queryRequest,
-      status: 'COMPLETED',
+      status: haveAllResults ? 'COMPLETED' : 'PENDING', // TODO: consider what happens when TTL expires - cache results disappear and request will never complete.
     });
-    const updatedQueries: QueryEntity[] = await this.queryRepository.save(queries);
+    const updatedQuery: QueryEntity = await this.queryRepository.save(query);
 
     console.log(`Updated query request with id: ${updatedQueryRequest.id}`, updatedQueryRequest);
-    console.log(
-      `Updated ${updatedQueries.length} queries for request with id: ${updatedQueryRequest.id}`,
-      updatedQueries,
-    );
+    console.log(`Updated query for request with id: ${updatedQueryRequest.id}`, updatedQuery);
 
     // Notify HTTP callback, if present.
-    if (updatedQueryRequest.callback_url) {
+    if (updatedQueryRequest.status === 'COMPLETED' && updatedQueryRequest.callback_url) {
       console.log('Notifying HTTP callback...', updatedQueryRequest.callback_url);
 
-      const response: CreateQueryResponseDto = {
-        id: updatedQueryRequest.id,
-        // queries: updatedQueries,
-        queries: updatedQueries.map((q) => {
-          const queryResult = new QueryResultDto();
-          queryResult.id = q.id;
-          queryResult.path = q.path;
-          queryResult.result = q.result;
-          return queryResult;
-        }),
-        callbackUrl: updatedQueryRequest.callback_url,
-        status: updatedQueryRequest.status,
-      };
-
       // TODO: consider guarantees / retries - for now, just fire and forget.
-      this.httpService.axiosRef.post<any>(`${updatedQueryRequest.callback_url}`, response).catch((error) => {
+      this.httpService.axiosRef.post<any>(`${updatedQueryRequest.callback_url}`, latestResponse).catch((error) => {
         console.error('Error notifying HTTP callback', error.response.status);
       });
     }
@@ -105,6 +99,7 @@ export class QueryManagerService {
         queryResult.id = q.id;
         queryResult.path = q.path;
         queryResult.result = q.result;
+        queryResult.query_request_id = q.query_request.id;
         return queryResult;
       }),
       callbackUrl: queryRequest.callback_url,
@@ -114,51 +109,37 @@ export class QueryManagerService {
     return response;
   }
 
-  async fetchQueryRequestResultsFromCache(queryRequest: QueryRequestEntity): Promise<CreateQueryResponseDto | null> {
+  async fetchQueryRequestResultsFromCache(
+    queryRequest: QueryRequestEntity,
+    shouldAllResultsExist: boolean,
+  ): Promise<CreateQueryResponseDto | null> {
     // TODO: consider batching to protect against over consumption.
-    const newQueryResults = await Promise.all(
-      queryRequest.queries
-        .map((e) => ({
-          id: e.id,
-          path: e.path,
-        }))
-        .map(async (q) => {
-          const result = await firstValueFrom(
-            this.client
-              .send<QueryResultDto, QueryResultDto>(MICROSERVICE_SUBJECTS.MESSAGES.CACHE_READ, q)
-              .pipe(catchError((error) => throwError(() => new RpcException(error)))),
-          );
-          return result;
-        }),
+    const newQueryResults: QueryResultDto[] = await Promise.all(
+      queryRequest.queries.map(async (q) => {
+        const queryResultDto: QueryResultDto = {
+          id: q.id,
+          path: q.path,
+          query_request_id: queryRequest.id,
+        };
+        const cachedQueryResultDto = await firstValueFrom(
+          this.client
+            .send<QueryResultDto, QueryResultDto>(MICROSERVICE_SUBJECTS.MESSAGES.CACHE_READ, queryResultDto)
+            .pipe(catchError((error) => throwError(() => new RpcException(error)))),
+        );
+        return cachedQueryResultDto;
+      }),
     );
 
     console.log('newQueryResults', newQueryResults);
 
-    const existsInCache = newQueryResults.every((r) => !!r.result);
+    const allResultsExistInCache = newQueryResults.every((r) => !!r.result);
 
-    if (existsInCache) {
-      console.log('Using cache results...');
-
-      queryRequest.queries = newQueryResults.map((r) => {
-        const query = new QueryEntity();
-        query.path = r.path;
-        query.result = r.result;
-        query.query_request = queryRequest;
-        return query;
-      });
+    if (!shouldAllResultsExist || allResultsExistInCache) {
+      console.log('Using available cache results...');
 
       const response: CreateQueryResponseDto = {
-        // id: createdQueryRequest.id,
-        // id: `${queryRequest.id}-cached_result`,
-        id: '',
-        // queries: queryRequest.queries,
-        queries: queryRequest.queries.map((q) => {
-          const queryResult = new QueryResultDto();
-          queryResult.id = q.id;
-          queryResult.path = q.path;
-          queryResult.result = q.result;
-          return queryResult;
-        }),
+        id: queryRequest.id,
+        queries: newQueryResults,
         callbackUrl: queryRequest.callback_url,
         status: 'COMPLETED',
       };
@@ -181,20 +162,32 @@ export class QueryManagerService {
       createdQueries,
     );
 
-    const createdQueryRequestDto: QueryRequestDto = {
-      id: createdQueryRequest.id,
-      queries: createdQueryRequest.queries.map((e) => ({
+    // const createdQueryRequestDto: QueryRequestDto = {
+    //   id: createdQueryRequest.id,
+    //   queries: createdQueryRequest.queries.map((e) => ({
+    //     id: e.id,
+    //     path: e.path,
+    //     query_request_id: createdQueryRequest.id,
+    //   })),
+    //   callbackUrl: createdQueryRequest.callback_url,
+    //   status: createdQueryRequest.status,
+    // };
+
+    // this.client.emit<void, QueryRequestDto>(
+    //   MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULTS_SCHEDULE_FETCH,
+    //   createdQueryRequestDto,
+    // );
+
+    // Perform asynchronously.
+    createdQueryRequest.queries
+      .map<QueryResultDto>((e) => ({
         id: e.id,
         path: e.path,
-      })),
-      callbackUrl: createdQueryRequest.callback_url,
-      status: createdQueryRequest.status,
-    };
-
-    this.client.emit<void, QueryRequestDto>(
-      MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULTS_SCHEDULE_FETCH,
-      createdQueryRequestDto,
-    );
+        query_request_id: createdQueryRequest.id,
+      }))
+      .forEach((q) => {
+        this.client.emit<void, QueryResultDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_SCHEDULE_FETCH, q);
+      });
 
     const response: CreateQueryResponseDto = {
       id: createdQueryRequest.id,
@@ -204,6 +197,7 @@ export class QueryManagerService {
         queryResult.id = q.id;
         queryResult.path = q.path;
         queryResult.result = q.result;
+        queryResult.query_request_id = q.query_request.id;
         return queryResult;
       }),
       callbackUrl: createdQueryRequest.callback_url,
@@ -218,11 +212,13 @@ export class QueryManagerService {
 
     const queries: QueryEntity[] = dto.queries.map((q) => {
       const query: QueryEntity = new QueryEntity();
+      query.id = uuidv4(); // Note: this is explicitly required due to cache request validation.
       query.path = q;
       query.query_request = queryRequest;
       return query;
     });
 
+    queryRequest.id = uuidv4(); // Note: this is explicitly required due to cache request validation.
     queryRequest.queries = queries;
     queryRequest.callback_url = dto.callbackUrl;
     queryRequest.status = 'PENDING';
