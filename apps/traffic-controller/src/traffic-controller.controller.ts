@@ -16,7 +16,7 @@ export class TrafficControllerController {
     return await this.trafficControllerService.getIsRateLimitedAsync();
   }
 
-  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH)
+  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_FETCH)
   incrementRateLimitUsage(): void {
     this.trafficControllerService.logUsage();
   }

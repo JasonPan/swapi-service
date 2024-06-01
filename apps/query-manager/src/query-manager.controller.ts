@@ -23,7 +23,7 @@ export class QueryManagerController {
     return await this.queryManagerService.processNewQueryRequestAsync(dto);
   }
 
-  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_RECEIVE)
+  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_RECEIVE)
   handleSubqueryResultAsync(@Payload() dto: SubqueryDto): void {
     this.queryManagerService.handleSubqueryResultAsync(dto);
   }

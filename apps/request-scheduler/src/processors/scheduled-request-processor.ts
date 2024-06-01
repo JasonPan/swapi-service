@@ -40,7 +40,7 @@ export class ScheduledRequestProcessor extends WorkerHost {
         await this.scheduledRequestsQueue.add(id, dto, { delay });
       } else {
         console.log('Not rate limited. Making request now.');
-        this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH, dto);
+        this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_FETCH, dto);
       }
     } catch (error) {
       console.error(`[${ScheduledRequestProcessor.name}] Job ${job.id} failed processing with error: ${error}`);

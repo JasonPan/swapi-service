@@ -18,7 +18,7 @@ export class CacheManagerController {
     return this.cacheManagerService.readCacheAsync(dto);
   }
 
-  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_RECEIVE)
+  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_RECEIVE)
   updateCache(@Payload() dto: SubqueryDto): void {
     console.log('received results');
     this.cacheManagerService.updateCache(dto);

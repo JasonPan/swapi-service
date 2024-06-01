@@ -6,8 +6,8 @@ export const MICROSERVICE_SUBJECTS = {
     CACHE_READ: 'swapi.cache.read',
   },
   EVENTS: {
-    DATA_RESULT_SCHEDULE_FETCH: 'swapi.data.result.schedule-fetch',
-    DATA_RESULT_FETCH: 'swapi.data.result.fetch',
-    DATA_RESULT_RECEIVE: 'swapi.data.result.receive',
+    SUBQUERY_RESULT_SCHEDULE_FETCH: 'swapi.subquery.result.schedule-fetch',
+    SUBQUERY_RESULT_FETCH: 'swapi.subquery.result.fetch',
+    SUBQUERY_RESULT_RECEIVE: 'swapi.subquery.result.receive',
   },
 } as const;

@@ -12,7 +12,7 @@ import { RpcDtoValidationPipe } from 'lib/common/pipes/rpc-dto-validation.pipe';
 export class SwapiConnectorController {
   constructor(private readonly swapiConnectorService: SwapiConnectorService) {}
 
-  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_FETCH)
+  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_FETCH)
   fetchData(@Payload() dto: SubqueryDto): void {
     console.log('received fetch request');
     this.swapiConnectorService.fetchDataAsync(dto);

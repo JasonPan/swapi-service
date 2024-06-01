@@ -50,7 +50,7 @@ export class SwapiConnectorService {
       };
 
       // async - will incrementally cache
-      this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_RECEIVE, newResult);
+      this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_RECEIVE, newResult);
     }
   }
 }

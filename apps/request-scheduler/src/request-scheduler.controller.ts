@@ -12,7 +12,7 @@ import { RpcDtoValidationPipe } from 'lib/common/pipes/rpc-dto-validation.pipe';
 export class RequestSchedulerController {
   constructor(private readonly requestSchedulerService: RequestSchedulerService) {}
 
-  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_SCHEDULE_FETCH)
+  @EventPattern(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_SCHEDULE_FETCH)
   scheduleRequest(@Payload() dto: SubqueryDto): void {
     this.requestSchedulerService.scheduleRequestAsync(dto);
   }

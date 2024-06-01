@@ -169,7 +169,7 @@ export class QueryManagerService {
         query_id: createdQuery.id,
       }))
       .forEach((q) => {
-        this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.DATA_RESULT_SCHEDULE_FETCH, q);
+        this.client.emit<void, SubqueryDto>(MICROSERVICE_SUBJECTS.EVENTS.SUBQUERY_RESULT_SCHEDULE_FETCH, q);
       });
 
     const response: CreateQueryResponseDto = {
