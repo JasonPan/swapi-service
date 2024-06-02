@@ -10,6 +10,7 @@
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:all": "npx concurrently \"npm run start api-gateway\" \"npm run start query-manager\" \"npm run start cache-manager\" \"npm run start traffic-controller\" \"npm run start request-scheduler\" \"npm run start swapi-connector\"",
     "start:dev:all": "npx concurrently \"npm run start:dev api-gateway\" \"npm run start:dev query-manager\" \"npm run start:dev cache-manager\" \"npm run start:dev traffic-controller\" \"npm run start:dev request-scheduler\" \"npm run start:dev swapi-connector\"",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/api-gateway/main",
