@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Job, Queue } from 'bullmq';
@@ -9,7 +10,7 @@ import { ScheduledRequestProcessor } from './scheduled-request-processor';
 import { SubqueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 import { initialSubqueriesStub } from 'lib/common/stubs';
-import { mockClientProxy, mockQueue } from 'lib/common/mocks';
+import { mockClientProxy, mockLogger, mockQueue } from 'lib/common/mocks';
 
 jest.mock('rxjs', () => {
   const originalModule = jest.requireActual('rxjs');
@@ -50,6 +51,7 @@ describe('ScheduledRequestProcessor', () => {
       controllers: [RequestSchedulerController],
       providers: [
         RequestSchedulerService,
+        { provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger },
         { provide: 'request-scheduler', useValue: mockClientProxy },
         { provide: 'BullQueue_scheduled-requests', useValue: mockQueue },
         ScheduledRequestProcessor,

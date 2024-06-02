@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { CacheManagerController } from './cache-manager.controller';
 import { CacheManagerService } from './cache-manager.service';
 import { SubqueryDto } from 'lib/common/dto';
@@ -7,6 +8,7 @@ import {
   createReadCacheResponseStub,
   createUpdateCacheRequestStub,
 } from 'lib/common/stubs';
+import { mockLogger } from 'lib/common/mocks';
 
 jest.mock('./cache-manager.service');
 
@@ -17,7 +19,7 @@ describe('CacheManagerController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [CacheManagerController],
-      providers: [CacheManagerService],
+      providers: [{ provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger }, CacheManagerService],
     }).compile();
 
     cacheManagerController = app.get<CacheManagerController>(CacheManagerController);

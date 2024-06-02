@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { QueryManagerController } from './query-manager.controller';
 import { QueryManagerService } from './query-manager.service';
 import {
@@ -15,6 +16,7 @@ import {
   createGetQueryRequestStub,
   createGetQueryResponseCompletedStub,
 } from 'lib/common/stubs';
+import { mockLogger } from 'lib/common/mocks';
 
 jest.mock('./query-manager.service');
 
@@ -25,7 +27,7 @@ describe('QueryManagerController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [QueryManagerController],
-      providers: [QueryManagerService],
+      providers: [{ provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger }, QueryManagerService],
     }).compile();
 
     queryManagerController = app.get<QueryManagerController>(QueryManagerController);

@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { RequestSchedulerController } from './request-scheduler.controller';
 import { RequestSchedulerService } from './request-scheduler.service';
 import { SubqueryDto } from 'lib/common/dto';
 import { initialSubqueriesStub } from 'lib/common/stubs';
+import { mockLogger } from 'lib/common/mocks';
 
 jest.mock('./request-scheduler.service');
 
@@ -13,7 +15,7 @@ describe('RequestSchedulerController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [RequestSchedulerController],
-      providers: [RequestSchedulerService],
+      providers: [{ provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger }, RequestSchedulerService],
     }).compile();
 
     requestSchedulerController = app.get<RequestSchedulerController>(RequestSchedulerController);

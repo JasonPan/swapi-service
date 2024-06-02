@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { SwapiConnectorController } from './swapi-connector.controller';
 import { SwapiConnectorService } from './swapi-connector.service';
 import { SubqueryDto } from 'lib/common/dto';
 import { initialSubqueriesStub } from 'lib/common/stubs';
+import { mockLogger } from 'lib/common/mocks';
 
 jest.mock('./swapi-connector.service');
 
@@ -13,7 +15,7 @@ describe('SwapiConnectorController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [SwapiConnectorController],
-      providers: [SwapiConnectorService],
+      providers: [{ provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger }, SwapiConnectorService],
     }).compile();
 
     swapiConnectorController = app.get<SwapiConnectorController>(SwapiConnectorController);

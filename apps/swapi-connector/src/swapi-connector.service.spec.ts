@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { SwapiConnectorController } from './swapi-connector.controller';
@@ -6,7 +7,7 @@ import { SwapiConnectorService } from './swapi-connector.service';
 import { SubqueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 import { completedSubqueriesStub, initialSubqueriesStub } from 'lib/common/stubs';
-import { mockClientProxy, mockConfigService, mockHttpService } from 'lib/common/mocks';
+import { mockClientProxy, mockConfigService, mockHttpService, mockLogger } from 'lib/common/mocks';
 import { ConfigService } from '@nestjs/config';
 
 jest.mock('rxjs', () => {
@@ -47,6 +48,7 @@ describe('SwapiConnectorService', () => {
       controllers: [SwapiConnectorController],
       providers: [
         SwapiConnectorService,
+        { provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger },
         { provide: 'swapi-connector', useValue: mockClientProxy },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: HttpService, useValue: mockHttpService },

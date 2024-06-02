@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { ApiGatewayController } from './api-gateway.controller';
 import { ApiGatewayService } from './api-gateway.service';
 import { CreateQueryRequestDto, GetQueryRequestDto, QueryDto } from 'lib/common/dto';
@@ -8,7 +9,7 @@ import {
   createCreateQueryRequestStub,
   createGetQueryRequestStub,
 } from 'lib/common/stubs';
-import { mockClientProxy } from 'lib/common/mocks';
+import { mockClientProxy, mockLogger } from 'lib/common/mocks';
 
 jest.mock('./api-gateway.service');
 
@@ -19,7 +20,11 @@ describe('ApiGatewayController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [ApiGatewayController],
-      providers: [ApiGatewayService, { provide: 'api-gateway', useValue: mockClientProxy }],
+      providers: [
+        ApiGatewayService,
+        { provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger },
+        { provide: 'api-gateway', useValue: mockClientProxy },
+      ],
     }).compile();
 
     apiGatewayController = app.get<ApiGatewayController>(ApiGatewayController);

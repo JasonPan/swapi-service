@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -26,7 +27,13 @@ import {
   getQueryEntityWithoutResults,
   initialSubqueriesStub,
 } from 'lib/common/stubs';
-import { mockClientProxy, mockHttpService, mockQueryRepository, mockSubqueryRepository } from 'lib/common/mocks';
+import {
+  mockClientProxy,
+  mockHttpService,
+  mockLogger,
+  mockQueryRepository,
+  mockSubqueryRepository,
+} from 'lib/common/mocks';
 
 jest.mock('rxjs', () => {
   const originalModule = jest.requireActual('rxjs');
@@ -58,6 +65,7 @@ describe('QueryManagerService', () => {
       controllers: [QueryManagerController],
       providers: [
         QueryManagerService,
+        { provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger },
         { provide: 'query-manager', useValue: mockClientProxy },
         { provide: getRepositoryToken(QueryEntity), useValue: mockQueryRepository },
         { provide: getRepositoryToken(SubqueryEntity), useValue: mockSubqueryRepository },
@@ -131,7 +139,11 @@ describe('QueryManagerService', () => {
       });
 
       it('should return a response', async () => {
-        expect(response).toEqual(createCreateQueryResponseFromCacheStub());
+        const expectedResponse = {
+          ...createCreateQueryResponseFromCacheStub(),
+          id: '',
+        };
+        expect(response).toEqual(expectedResponse);
       });
 
       it('should handle errors by throwing RpcException', async () => {
@@ -322,6 +334,7 @@ describe('QueryManagerService', () => {
 
       it('should return a response', async () => {
         const expectedResponse = createCreateQueryResponseFromCacheStub();
+        expectedResponse.id = '';
         expectedResponse.subqueries[2].result = null;
         expect(response).toEqual(expectedResponse);
       });

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CacheManagerController } from './cache-manager.controller';
@@ -11,7 +12,7 @@ import {
   createUpdateCacheRequestStub,
   getSwapiResourceEntities,
 } from 'lib/common/stubs';
-import { mockClientProxy, mockSwapiResourceRepository } from 'lib/common/mocks';
+import { mockClientProxy, mockLogger, mockSwapiResourceRepository } from 'lib/common/mocks';
 
 describe('CacheManagerService', () => {
   let cacheManagerService: CacheManagerService;
@@ -22,6 +23,7 @@ describe('CacheManagerService', () => {
       controllers: [CacheManagerController],
       providers: [
         CacheManagerService,
+        { provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger },
         { provide: 'cache-manager', useValue: mockClientProxy },
         { provide: getRepositoryToken(SwapiResourceEntity), useValue: mockSwapiResourceRepository },
       ],

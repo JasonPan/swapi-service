@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { TrafficControllerController } from './traffic-controller.controller';
 import { TrafficControllerService } from './traffic-controller.service';
+import { mockLogger } from 'lib/common/mocks';
 
 jest.mock('./traffic-controller.service');
 
@@ -11,7 +13,7 @@ describe('TrafficControllerController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [TrafficControllerController],
-      providers: [TrafficControllerService],
+      providers: [{ provide: WINSTON_MODULE_NEST_PROVIDER, useValue: mockLogger }, TrafficControllerService],
     }).compile();
 
     trafficControllerController = app.get<TrafficControllerController>(TrafficControllerController);
