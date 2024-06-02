@@ -9,7 +9,7 @@ import {
   createReadCacheResponseStub,
   createReadCacheRequestStub,
   createUpdateCacheRequestStub,
-  getSwapiResourceEntity,
+  getSwapiResourceEntities,
 } from 'lib/common/stubs';
 import { mockClientProxy, mockSwapiResourceRepository } from 'lib/common/mocks';
 
@@ -47,12 +47,12 @@ describe('CacheManagerService', () => {
   describe('readCacheAsync', () => {
     describe('when readCacheAsync is called', () => {
       let request: SubqueryDto;
-      let result: SubqueryDto;
+      let response: SubqueryDto;
 
       beforeEach(async () => {
         request = createReadCacheRequestStub();
         jest.spyOn(cacheManagerService, 'readCacheAsync'); // Required for first test
-        result = await cacheManagerService.readCacheAsync(request);
+        response = await cacheManagerService.readCacheAsync(request);
       });
 
       it('should be called with dto', () => {
@@ -63,8 +63,8 @@ describe('CacheManagerService', () => {
         expect(swapiResourceRepository.findOne).toHaveBeenCalledWith({ where: { path: request.path } });
       });
 
-      it('should not return a result', async () => {
-        expect(result).toEqual(createReadCacheResponseStub());
+      it('should not return a response', async () => {
+        expect(response).toEqual(createReadCacheResponseStub());
       });
 
       it('should handle errors by throwing RpcException', async () => {
@@ -80,12 +80,12 @@ describe('CacheManagerService', () => {
   describe('updateCache', () => {
     describe('when updateCache is called', () => {
       let request: SubqueryDto;
-      let result: void;
+      let response: void;
 
       beforeEach(async () => {
         request = createUpdateCacheRequestStub();
         jest.spyOn(cacheManagerService, 'updateCache'); // Required for first test
-        result = await cacheManagerService.updateCache(request);
+        response = await cacheManagerService.updateCache(request);
       });
 
       it('should be called with dto', () => {
@@ -93,11 +93,11 @@ describe('CacheManagerService', () => {
       });
 
       it('should call swapiResourceRepository and save entity', () => {
-        expect(swapiResourceRepository.save).toHaveBeenCalledWith(getSwapiResourceEntity());
+        expect(swapiResourceRepository.save).toHaveBeenCalledWith(getSwapiResourceEntities()[0]);
       });
 
-      it('should not return a result', async () => {
-        expect(result).toEqual(undefined);
+      it('should not return a response', async () => {
+        expect(response).toEqual(undefined);
       });
 
       it('should handle errors by throwing RpcException', async () => {

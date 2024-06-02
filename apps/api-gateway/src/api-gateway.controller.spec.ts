@@ -3,8 +3,8 @@ import { ApiGatewayController } from './api-gateway.controller';
 import { ApiGatewayService } from './api-gateway.service';
 import { CreateQueryRequestDto, GetQueryRequestDto, QueryDto } from 'lib/common/dto';
 import {
-  createCreateQueryResponseStub,
-  createGetQueryResponseStub,
+  createCreateQueryResponseFromCacheStub,
+  createGetQueryResponseCompletedStub,
   createCreateQueryRequestStub,
   createGetQueryRequestStub,
 } from 'lib/common/stubs';
@@ -50,10 +50,10 @@ describe('ApiGatewayController', () => {
     describe('when createQueryAsync is called', () => {
       const request: CreateQueryRequestDto = createCreateQueryRequestStub();
       const bodyParameters: CreateQueryRequestDto = request;
-      let expectedResponse: QueryDto;
+      let response: QueryDto;
 
       beforeEach(async () => {
-        expectedResponse = await apiGatewayController.createQueryAsync(bodyParameters);
+        response = await apiGatewayController.createQueryAsync(bodyParameters);
       });
 
       it('should call apiGatewayService', () => {
@@ -61,7 +61,7 @@ describe('ApiGatewayController', () => {
       });
 
       it('should return a query response', () => {
-        expect(expectedResponse).toEqual(createCreateQueryResponseStub());
+        expect(response).toEqual(createCreateQueryResponseFromCacheStub());
       });
     });
   });
@@ -70,10 +70,10 @@ describe('ApiGatewayController', () => {
     describe('when getQueryAsync is called', () => {
       const request: GetQueryRequestDto = createGetQueryRequestStub();
       const bodyParameters: GetQueryRequestDto = request;
-      let expectedResponse: QueryDto;
+      let response: QueryDto;
 
       beforeEach(async () => {
-        expectedResponse = await apiGatewayController.getQueryAsync(bodyParameters);
+        response = await apiGatewayController.getQueryAsync(bodyParameters);
       });
 
       it('should call apiGatewayService', () => {
@@ -81,7 +81,7 @@ describe('ApiGatewayController', () => {
       });
 
       it('should return a query response', () => {
-        expect(expectedResponse).toEqual(createGetQueryResponseStub());
+        expect(response).toEqual(createGetQueryResponseCompletedStub());
       });
     });
   });

@@ -5,8 +5,8 @@ import { ApiGatewayService } from './api-gateway.service';
 import { CreateQueryRequestDto, CreateQueryResponseDto, GetQueryRequestDto, QueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 import {
-  createCreateQueryResponseStub,
-  createGetQueryResponseStub,
+  createCreateQueryResponseFromCacheStub,
+  createGetQueryResponseCompletedStub,
   createCreateQueryRequestStub,
   createGetQueryRequestStub,
 } from 'lib/common/stubs';
@@ -51,15 +51,15 @@ describe('ApiGatewayService', () => {
     describe('when createQueryRequestAsync is called', () => {
       const request: CreateQueryRequestDto = createCreateQueryRequestStub();
 
-      it('should call client.send with correct parameters and return the result', async () => {
-        const expectedResponse: CreateQueryResponseDto = createCreateQueryResponseStub();
+      it('should call client.send with correct parameters and return the response', async () => {
+        const expectedResponse: CreateQueryResponseDto = createCreateQueryResponseFromCacheStub();
 
         (firstValueFrom as jest.Mock).mockResolvedValueOnce(expectedResponse);
 
-        const result = await apiGatewayService.createQueryRequestAsync(request);
+        const response = await apiGatewayService.createQueryRequestAsync(request);
 
         expect(mockClientProxy.send).toHaveBeenCalledWith(MICROSERVICE_SUBJECTS.MESSAGES.QUERY_CREATE, request);
-        expect(result).toEqual(expectedResponse);
+        expect(response).toEqual(expectedResponse);
       });
 
       it('should handle errors by throwing RpcException', async () => {
@@ -76,15 +76,15 @@ describe('ApiGatewayService', () => {
     describe('when getQueryRequest is called', () => {
       const request: GetQueryRequestDto = createGetQueryRequestStub();
 
-      it('should call client.send with correct parameters and return the result', async () => {
-        const expectedResponse: QueryDto = createGetQueryResponseStub();
+      it('should call client.send with correct parameters and return the response', async () => {
+        const expectedResponse: QueryDto = createGetQueryResponseCompletedStub();
 
         (firstValueFrom as jest.Mock).mockResolvedValueOnce(expectedResponse);
 
-        const result = await apiGatewayService.getQueryRequest(request);
+        const response = await apiGatewayService.getQueryRequest(request);
 
         expect(mockClientProxy.send).toHaveBeenCalledWith(MICROSERVICE_SUBJECTS.MESSAGES.QUERY_READ, request);
-        expect(result).toEqual(expectedResponse);
+        expect(response).toEqual(expectedResponse);
       });
 
       it('should handle errors by throwing RpcException', async () => {

@@ -47,10 +47,10 @@ describe('CacheManagerController', () => {
     describe('when readCacheAsync is called', () => {
       const request: SubqueryDto = createReadCacheRequestStub();
       const bodyParameters: SubqueryDto = request;
-      let expectedResponse: SubqueryDto;
+      let response: SubqueryDto;
 
       beforeEach(async () => {
-        expectedResponse = await cacheManagerController.readCacheAsync(bodyParameters);
+        response = await cacheManagerController.readCacheAsync(bodyParameters);
       });
 
       it('should call cacheManagerService', () => {
@@ -58,7 +58,7 @@ describe('CacheManagerController', () => {
       });
 
       it('should return a response', () => {
-        expect(expectedResponse).toEqual(createReadCacheResponseStub());
+        expect(response).toEqual(createReadCacheResponseStub());
       });
     });
   });
@@ -67,10 +67,10 @@ describe('CacheManagerController', () => {
     describe('when updateCache is called', () => {
       const request: SubqueryDto = createUpdateCacheRequestStub();
       const bodyParameters: SubqueryDto = request;
-      let expectedResponse: void;
+      let response: void;
 
       beforeEach(async () => {
-        expectedResponse = await cacheManagerController.updateCache(bodyParameters);
+        response = await cacheManagerController.updateCache(bodyParameters);
       });
 
       it('should call cacheManagerService', () => {
@@ -78,7 +78,7 @@ describe('CacheManagerController', () => {
       });
 
       it('should not return a response', () => {
-        expect(expectedResponse).toEqual(undefined);
+        expect(response).toEqual(undefined);
       });
     });
   });
