@@ -3,12 +3,20 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { BullModule } from '@nestjs/bullmq';
+import { WinstonModule } from 'nest-winston';
+import { format, transports } from 'winston';
 import { RequestSchedulerController } from './request-scheduler.controller';
 import { RequestSchedulerService } from './request-scheduler.service';
 import { ScheduledRequestProcessor } from './processors/scheduled-request-processor';
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      level: 'info',
+      format: format.combine(format.timestamp(), format.json()),
+      defaultMeta: { service: process.env.SERVICE_NAME },
+      transports: [new transports.Console()],
+    }),
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.string().required(),

@@ -1,18 +1,19 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Inject, LoggerService } from '@nestjs/common';
 import { NatsContext } from '@nestjs/microservices';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
 @Injectable()
 export class RpcLoggingInterceptor implements NestInterceptor {
-  constructor() {}
+  constructor(@Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next
       .handle()
       .pipe(
         catchError((err) => {
-          console.error(err, null, RpcLoggingInterceptor.name);
+          this.logger.error(err, null, RpcLoggingInterceptor.name);
           return throwError(() => err);
         }),
       )
@@ -24,7 +25,7 @@ export class RpcLoggingInterceptor implements NestInterceptor {
           const payload = context.getArgByIndex(0);
           const duration = Date.now() - requestStartTime;
 
-          console.log(
+          this.logger.log(
             {
               type,
               request: {

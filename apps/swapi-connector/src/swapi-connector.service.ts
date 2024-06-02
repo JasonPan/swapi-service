@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { AxiosRequestConfig } from 'axios';
 import { firstValueFrom, catchError, throwError } from 'rxjs';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { SubqueryDto } from 'lib/common/dto';
 import { MICROSERVICE_SUBJECTS } from 'lib/common/constants';
 
@@ -12,6 +13,7 @@ export class SwapiConnectorService {
   private readonly SWAPI_BASE_URL: string;
 
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService,
     @Inject('swapi-connector') private client: ClientProxy,
     private httpService: HttpService,
     private readonly configService: ConfigService,
@@ -20,7 +22,7 @@ export class SwapiConnectorService {
   }
 
   async fetchDataAsync(dto: SubqueryDto): Promise<void> {
-    console.log('Fetching data');
+    this.logger.log('Fetching data');
 
     const config: AxiosRequestConfig = {
       responseType: 'json',
@@ -38,11 +40,11 @@ export class SwapiConnectorService {
       result: resourceData,
     };
 
-    console.log('found resource', resource);
+    this.logger.log('found resource', resource);
 
     if (!resourceData) {
       const { data } = await this.httpService.axiosRef.get<any>(`${this.SWAPI_BASE_URL}/${dto.path}`, config);
-      console.log('found data', data);
+      this.logger.log('found data', data);
 
       newResult = {
         ...dto,

@@ -20,7 +20,7 @@ export class RpcExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const status = (error as any)?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR;
 
-    console.error(error);
+    this.logger.error(error);
     response.status(status).json(error);
   }
 }

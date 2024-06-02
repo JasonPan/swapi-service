@@ -1,5 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { v4 as uuidv4 } from 'uuid';
 import { RedisRepository } from 'lib/common/modules/redis/redis.repository';
 
@@ -9,6 +10,7 @@ export class TrafficControllerService {
   private readonly REQUEST_LIMIT: number;
 
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService,
     @Inject(RedisRepository) private readonly redisRepository: RedisRepository,
     private readonly configService: ConfigService,
   ) {
@@ -19,7 +21,7 @@ export class TrafficControllerService {
     // Note: enable for rate-limit debugging only.
     // return new Date().valueOf() % 2 === 0;
     const currentUsage = await this.getUsageCount();
-    console.log('currentUsage', currentUsage, this.REQUEST_LIMIT);
+    this.logger.log('currentUsage', currentUsage, this.REQUEST_LIMIT);
     return currentUsage >= this.REQUEST_LIMIT;
   }
 
@@ -31,7 +33,7 @@ export class TrafficControllerService {
   }
 
   async logUsage(): Promise<void> {
-    console.log('Logging usage', await this.getUsageCount());
+    this.logger.log('Logging usage', await this.getUsageCount());
 
     const windowInSeconds = oneDayInSeconds; // TODO: move into provider.
     const windowInMilliseconds = windowInSeconds * 1000;
@@ -49,7 +51,7 @@ export class TrafficControllerService {
       ['expire', key, `${oneDayInSeconds}`],
     ]);
 
-    console.log('Logged usage', await this.getUsageCount());
+    this.logger.log('Logged usage', await this.getUsageCount());
   }
 
   async getUsageCount(): Promise<number> {

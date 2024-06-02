@@ -1,12 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { WinstonModule } from 'nest-winston';
+import { format, transports } from 'winston';
 import { TrafficControllerController } from './traffic-controller.controller';
 import { TrafficControllerService } from './traffic-controller.service';
 import { RedisModule } from 'lib/common/modules/redis/redis-database.module';
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      level: 'info',
+      format: format.combine(format.timestamp(), format.json()),
+      defaultMeta: { service: process.env.SERVICE_NAME },
+      transports: [new transports.Console()],
+    }),
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.string().required(),

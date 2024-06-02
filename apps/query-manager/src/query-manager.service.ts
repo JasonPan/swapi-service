@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityNotFoundError, Repository } from 'typeorm';
 import { catchError, firstValueFrom, throwError } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { v4 as uuidv4 } from 'uuid';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import {
   CreateQueryRequestDto,
   CreateQueryResponseDto,
@@ -19,6 +20,7 @@ import { SubqueryEntity } from 'lib/common/modules';
 @Injectable()
 export class QueryManagerService {
   constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService,
     @Inject('query-manager') private client: ClientProxy,
     @InjectRepository(QueryEntity)
     private readonly queryRepository: Repository<QueryEntity>,
@@ -42,14 +44,14 @@ export class QueryManagerService {
   }
 
   async handleSubqueryResultAsync(dto: SubqueryDto): Promise<void> {
-    console.log('handleSubqueryResultAsync', dto);
+    this.logger.log('handleSubqueryResultAsync', dto);
 
     const subquery = await this.subqueryRepository.findOneOrFail({ where: { id: dto.id } });
     subquery.result = dto.result;
 
     const query = await this.queryRepository.findOneOrFail({ where: { id: dto.query_id } });
 
-    console.log('Saving...', subquery, query);
+    this.logger.log('Saving...', subquery, query);
 
     // TODO: use the results stored with the request directly, not re-retrieve from the cache. Define in API contract about request TTL to limit liability / guarantee freshness.
     const cacheResults = await this.fetchQueryRequestResultsFromCache(query, false);
@@ -59,7 +61,7 @@ export class QueryManagerService {
       callbackUrl: query.callback_url,
       status: query.status,
     };
-    console.log('latestResponse', latestResponse);
+    this.logger.log('latestResponse', latestResponse);
 
     const haveAllResults = latestResponse.subqueries.every((q) => !!q.result);
 
@@ -70,42 +72,55 @@ export class QueryManagerService {
     });
     const updatedSubquery: SubqueryEntity = await this.subqueryRepository.save(subquery);
 
-    console.log(`Updated query request with id: ${updatedQuery.id}`, updatedQuery);
-    console.log(`Updated subquery for request with id: ${updatedQuery.id}`, updatedSubquery);
+    this.logger.log(`Updated query request with id: ${updatedQuery.id}`, updatedQuery);
+    this.logger.log(`Updated subquery for request with id: ${updatedQuery.id}`, updatedSubquery);
 
     // Notify HTTP callback, if present.
     if (updatedQuery.status === 'COMPLETED' && updatedQuery.callback_url) {
-      console.log('Notifying HTTP callback...', updatedQuery.callback_url);
+      this.logger.log('Notifying HTTP callback...', updatedQuery.callback_url);
 
       // TODO: consider guarantees / retries - for now, just fire and forget.
       this.httpService.axiosRef.post<any>(`${updatedQuery.callback_url}`, latestResponse).catch((error) => {
-        console.error('Error notifying HTTP callback', error.response.status);
+        this.logger.error('Error notifying HTTP callback', error.response.status);
       });
     }
   }
 
   async fetchQueryResultsAsync(dto: GetQueryRequestDto): Promise<QueryDto> {
-    const query: QueryEntity = await this.queryRepository.findOneOrFail({ where: { id: dto.id } });
+    try {
+      const query: QueryEntity = await this.queryRepository.findOneOrFail({ where: { id: dto.id } });
 
-    console.log(`Fetched query request with id: ${query.id}`);
-    console.log(`Fetched ${query.subqueries.length} subqueries for request with id: ${query.id}`);
+      this.logger.log(`Fetched query request with id: ${query.id}`);
+      this.logger.log(`Fetched ${query.subqueries.length} subqueries for request with id: ${query.id}`);
 
-    const response: CreateQueryResponseDto = {
-      id: query.id,
-      subqueries: query.subqueries.map((q) => {
-        const subquery = new SubqueryDto();
-        subquery.id = q.id;
-        subquery.path = q.path;
-        subquery.result = q.result;
-        // subquery.query_id = q.query.id;
-        subquery.query_id = query.id;
-        return subquery;
-      }),
-      callbackUrl: query.callback_url,
-      status: query.status,
-    };
+      const response: CreateQueryResponseDto = {
+        id: query.id,
+        subqueries: query.subqueries.map((q) => {
+          const subquery = new SubqueryDto();
+          subquery.id = q.id;
+          subquery.path = q.path;
+          subquery.result = q.result;
+          // subquery.query_id = q.query.id;
+          subquery.query_id = query.id;
+          return subquery;
+        }),
+        callbackUrl: query.callback_url,
+        status: query.status,
+      };
 
-    return response;
+      return response;
+    } catch (err) {
+      if (err instanceof EntityNotFoundError) {
+        return {
+          id: 'NOT_FOUND',
+          subqueries: [],
+          callbackUrl: '',
+          status: 'PENDING',
+        };
+      } else {
+        throw err;
+      }
+    }
   }
 
   async fetchQueryRequestResultsFromCache(
@@ -129,15 +144,18 @@ export class QueryManagerService {
       }),
     );
 
-    console.log('newQueryResults', newSubqueries);
+    this.logger.log('newQueryResults', newSubqueries);
 
     const allResultsExistInCache = newSubqueries.every((r) => !!r.result);
 
     if (!shouldAllResultsExist || allResultsExistInCache) {
-      console.log('Using available cache results...');
+      this.logger.log('Using available cache results...');
 
       const response: CreateQueryResponseDto = {
-        id: query.id,
+        // TODO: handle this better: for better performance, we're exiting early and not logging this transaction.
+        // Note: blank so that people don't try to use the ID, as it won't be found in the database.
+        // id: query.id,
+        id: '',
         subqueries: newSubqueries,
         callbackUrl: query.callback_url,
         status: 'COMPLETED',
@@ -145,7 +163,7 @@ export class QueryManagerService {
 
       return response;
     } else {
-      console.log('No complete cache results found...');
+      this.logger.log('No complete cache results found...');
       return null;
     }
   }
@@ -155,8 +173,8 @@ export class QueryManagerService {
     const createdQuery: QueryEntity = await this.queryRepository.save(query);
     const createdSubqueries: SubqueryEntity[] = await this.subqueryRepository.save(query.subqueries);
 
-    console.log(`Created query request with id: ${createdQuery.id}`, createdQuery);
-    console.log(
+    this.logger.log(`Created query request with id: ${createdQuery.id}`, createdQuery);
+    this.logger.log(
       `Created ${createdSubqueries.length} subqueries for request with id: ${createdQuery.id}`,
       createdSubqueries,
     );

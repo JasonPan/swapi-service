@@ -2,12 +2,20 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WinstonModule } from 'nest-winston';
+import { format, transports } from 'winston';
 import { CacheManagerController } from './cache-manager.controller';
 import { CacheManagerService } from './cache-manager.service';
 import { MongoDatabaseModule, SwapiResourceEntity } from 'lib/common/modules/mongo';
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      level: 'info',
+      format: format.combine(format.timestamp(), format.json()),
+      defaultMeta: { service: process.env.SERVICE_NAME },
+      transports: [new transports.Console()],
+    }),
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.string().required(),
