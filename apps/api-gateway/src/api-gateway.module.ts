@@ -1,12 +1,14 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 import { WinstonModule } from 'nest-winston';
 import { format, transports } from 'winston';
 import { ApiGatewayController } from './api-gateway.controller';
 import { ApiGatewayService } from './api-gateway.service';
 import { HttpLoggerMiddleware } from './middlewares/http-logger.middleware';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -34,9 +36,21 @@ import { HttpLoggerMiddleware } from './middlewares/http-logger.middleware';
         },
       },
     ]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 86400 * 1000, //  1 day in ms
+        limit: 20000,
+      },
+    ]),
   ],
   controllers: [ApiGatewayController],
-  providers: [ApiGatewayService],
+  providers: [
+    ApiGatewayService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class ApiGatewayModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
