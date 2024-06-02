@@ -22,6 +22,7 @@ As there is no concrete business case to optimise for, some assumptions have bee
 1. Cost optimisation can be considered out of scope, as long as within reason.
 2. High throughput requirement of the system is assumed - e.g. higher than the 10K / day limit that SWAPI imposes.
 3. There is a desire that once rate-limiting of the target service is reached, that requests do not begin to fail with e.g. an 429 status. Instead, the system can be designed to be event-driven and allow data requests to be scheduled in the background.
+4. While the SWAPI API service itself is quite small (acoording to [their own statistics](https://swapi.dev/about), only 260 resources), for the purposes of extensibility and scalability, it is assumed that the system needs to tolerate a large number of target resources, such that they cannot all be cached for fast retrieval and to side-step the rate-limiting issue.
 
 Fundamentally, the system that needs to be designed consists of two components:
 1. An HTTP-based API gateway, to allow requests to be received and responded.
