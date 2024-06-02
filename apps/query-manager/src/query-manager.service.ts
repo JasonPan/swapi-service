@@ -164,6 +164,17 @@ export class QueryManagerService {
       return response;
     } else {
       this.logger.log('No complete cache results found...');
+
+      // Mutate the input query to re-use cache results.
+      query.subqueries = newSubqueries.map((q) => {
+        const subquery = new SubqueryEntity();
+        subquery.id = q.id;
+        subquery.path = q.path;
+        subquery.result = q.result;
+        subquery.query = query;
+        return subquery;
+      });
+
       return null;
     }
   }
@@ -179,8 +190,22 @@ export class QueryManagerService {
       createdSubqueries,
     );
 
+    // Only include each subquery path once (we do not need to fetch the same resource twice).
+    // Also, only include subqueries that don't have data.
+    const targetSubqueries = Object.values(
+      createdQuery.subqueries
+        .filter((e) => !e.result)
+        .reduce(
+          (a, e) => {
+            a[e.path] = a[e.path] || e;
+            return a;
+          },
+          {} as Record<string, SubqueryEntity>,
+        ),
+    );
+
     // Perform asynchronously.
-    createdQuery.subqueries
+    targetSubqueries
       .map<SubqueryDto>((e) => ({
         id: e.id,
         path: e.path,
