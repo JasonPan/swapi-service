@@ -66,10 +66,10 @@ Combined with the previous stated requirements and goals, the following solution
 ## TODOs / other remarks
 
  - Due to time constraints, the following key functionality and activities have not yet been completed
-  - JetStream delivery guarantees
-  - API error handling and full input sanitisation.
-  - Performance testing - ideally with something like JMeter to observe how well the system handles throughput and baseline latency. Observations during exploratory testing revealed requests to average approx 20 - 150ms for low throughput.
-  - App containerisation (currently, only backend resources - databases / NATS - are set up via Docker Compose)
+    - JetStream delivery guarantees
+    - API error handling and full input sanitisation.
+    - Performance testing - ideally with something like JMeter to observe how well the system handles throughput and baseline latency. Observations during exploratory testing revealed requests to average approx 20 - 150ms for low throughput.
+    - App containerisation (currently, only backend resources - databases / NATS - are set up via Docker Compose)
  - Multiple databases have been used for additional isolation, and for the author's own learning; in a production scenario, careful analysis is required to understand business requirements and understand cost implications.
  - This system was built with a few guiding assumptions; in a production environment, additional considerations are required on business need and value to justify this system design. This includes perhaps picking a technology and framework higher on the [TechEmpower rankings](https://www.techempower.com/benchmarks/#section=data-r22&hw=ph&test=fortune) (currently NestJS + TypeScript are rank 106 / 13.6%, whereas ASP.NET is #15 at 76% of max observed performance)
 
